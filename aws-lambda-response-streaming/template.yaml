@@ -1,0 +1,30 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+
+Resources:
+  StreamingFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      Handler: index.handler
+      Runtime: nodejs16.x
+      Timeout: 30
+      MemorySize: 512
+  MyFunctionUrl:
+    Type: AWS::Lambda::Url
+    Properties:
+      TargetFunctionArn: !GetAtt StreamingFunction.Arn
+      AuthType: NONE
+      InvokeMode: RESPONSE_STREAM
+  permissionForURLInvoke:
+    Type: AWS::Lambda::Permission
+    Properties: 
+      Action: lambda:InvokeFunctionUrl
+      FunctionName: !GetAtt StreamingFunction.Arn
+      FunctionUrlAuthType: 'NONE'
+      Principal: "*"
+
+Outputs:
+  StreamingFunctionURL:
+    Description: "Streaming Lambda Function URL"
+    Value: !GetAtt MyFunctionUrl.FunctionUrl
